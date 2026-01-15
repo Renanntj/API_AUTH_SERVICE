@@ -1,10 +1,8 @@
-from sqlalchemy.orm import Session, sessionmaker
-from models import DATABASE_URL
+from models import SessionLocal
 
 def open_session():
+    db = SessionLocal()
     try:
-        Session = sessionmaker(bind=DATABASE_URL)
-        session = Session()
-        yield session
+        yield db
     finally:
-        session.close()
+        db.close()
