@@ -69,7 +69,7 @@ async def login_user_auth(user_schema: LoginSchema, session: Session = Depends(o
 async def login_user_auth(dados_form : OAuth2PasswordRequestForm = Depends(), session: Session = Depends(open_session)):
     user = auth_user(dados_form.username, dados_form.password, session)
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid username or password.")
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
     else:
         access_token = create_token(user.id)
         return {"access_token": access_token,
