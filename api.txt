@@ -1,9 +1,8 @@
-1️⃣ API de Autenticação Completa (Auth Service)
+1️API de Autenticação Completa (Auth Service)
 Descrição
 Cadastro, login, refresh token, recuperação de senha
 JWT + OAuth2
 Hash de senha (bcrypt)
-Mostra que você sabe
 Segurança básica de APIs
 JWT, OAuth2, dependências do FastAPI
 Middlewares e permissões
