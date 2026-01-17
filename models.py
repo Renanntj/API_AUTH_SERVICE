@@ -1,5 +1,7 @@
-from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy import create_engine, Column, String, Integer, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Column, String, DateTime
+
 DATABASE_URL = "sqlite:///./banco.db"
 
 engine = create_engine(
@@ -28,3 +30,13 @@ class Users(Base):
         self.senha = senha
         self.name = name
         
+class EmailCode(Base):
+    __tablename__ = "email_codes"
+
+    email = Column(String, primary_key=True)
+    code = Column(String)
+    expires_at = Column(DateTime)
+
+
+
+

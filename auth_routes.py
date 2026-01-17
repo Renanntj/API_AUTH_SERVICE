@@ -1,15 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
-from models import Users
+from models import Users, EmailCode
 from dependencies import open_session, verify_token
 from main import bcrypt_context
 from config import ALGORITHM, ACCESS_TOKEN_MINUTES, SECRET_KEY
-from schemas import UsersSchema, LoginSchema
+from schemas import UsersSchema, LoginSchema, RecoverPasswordRequest, VerifyCodeRequest, ResetPasswordRequest
 from sqlalchemy.orm import Session
 from jose import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordRequestForm
+from password_recovery_service import start_password_recovery
 
 auth_roter = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def get_user_by_email(session: Session, email: str):
+    return session.query(Users).filter(Users.email == email).first()
 
 
 def hash_password(password: str) -> str:
@@ -82,3 +87,73 @@ async def refresh_roter_auth(user: Session = Depends(verify_token)):
     return {"access_token": access_token,
             "token_type": "Bearer"
         }
+    
+@auth_roter.post("/recover-password")
+async def recover_pass(payload: RecoverPasswordRequest, session: Session = Depends(open_session)):
+    user = get_user_by_email(session, payload.email)
+
+    if user:
+        start_password_recovery(session, payload.email)
+
+    return {
+        "message": "If the email exists, a recovery code was sent."
+    }
+    
+
+@auth_roter.post("/verify-recovery-code")
+async def verify_recovery_code(
+    payload: VerifyCodeRequest,
+    session: Session = Depends(open_session)
+):
+    record = session.query(EmailCode)\
+        .filter(EmailCode.email == payload.email)\
+        .first()
+
+    if not record:
+        raise HTTPException(400, "Invalid or expired code")
+
+    if datetime.now() > record.expires_at:
+        session.delete(record)
+        session.commit()
+        raise HTTPException(400, "Invalid or expired code")
+
+    if record.code != payload.code:
+        raise HTTPException(400, "Invalid or expired code")
+
+    return {
+        "message": "Code validated successfully"
+    }
+    
+@auth_roter.post("/reset-password")
+async def reset_password(
+    payload: ResetPasswordRequest,
+    session: Session = Depends(open_session)
+):
+    record = session.query(EmailCode)\
+        .filter(EmailCode.email == payload.email)\
+        .first()
+
+    if not record:
+        raise HTTPException(400, "Invalid or expired code")
+
+    if datetime.now() > record.expires_at:
+        session.delete(record)
+        session.commit()
+        raise HTTPException(400, "Invalid or expired code")
+
+    if record.code != payload.code:
+        raise HTTPException(400, "Invalid or expired code")
+
+    user = get_user_by_email(session, payload.email)
+
+    if not user:
+        raise HTTPException(400, "Invalid or expired code")
+
+    user.password = hash_password(payload.new_password)
+
+    session.delete(record)
+    session.commit()
+
+    return {
+        "message": "Password reset successfully"
+    }

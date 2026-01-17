@@ -5,7 +5,6 @@ from models import Users
 from jose import jwt, JWTError  
 from config import SECRET_KEY, ALGORITHM
 from main import oauth2_schema
-
 def open_session():
     db = SessionLocal()
     try:
@@ -23,3 +22,5 @@ def verify_token(token: str = Depends(oauth2_schema), session: Session = Depends
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
     return user
+
+

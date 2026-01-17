@@ -14,3 +14,24 @@ class LoginSchema(BaseModel):
     
     class Config:
         from_attributes = True
+        
+class RecoverPasswordRequest(BaseModel):
+    email: str
+    
+    class Config:
+        from_attributes = True
+        
+class VerifyCodeRequest(BaseModel):
+    email: str
+    code: str
+
+    class Config:
+        from_attributes = True
+        
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    new_password: str
+    
+    class Config:
+        from_attributes = True
